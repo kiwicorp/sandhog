@@ -28,6 +28,7 @@ func NewTunnel(address, name string) (*Tunnel, error) {
 	if err != nil {
 		return nil, err
 	}
+	// fixme 20/11/2020: a double for loop is probabil not the best idea
 	for _, existingLink := range existingLinks {
 		existingAddrList, err := netlink.AddrList(existingLink, netlink.FAMILY_ALL)
 		if err != nil {
