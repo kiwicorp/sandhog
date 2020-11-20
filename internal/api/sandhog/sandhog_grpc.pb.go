@@ -19,10 +19,6 @@ const _ = grpc.SupportPackageIsVersion7
 type SandhogClient interface {
 	// Tell sandhog to start a new tunnel.
 	StartTunnel(ctx context.Context, in *StartTunnelRequest, opts ...grpc.CallOption) (*StartTunnelResponse, error)
-	// Tell sandhog to dig a new tunnel to a peer.
-	DigTunnel(ctx context.Context, in *DigTunnelRequest, opts ...grpc.CallOption) (*DigTunnelResponse, error)
-	// Tell sandhog to bury a tunnel to a peer.
-	BuryTunnel(ctx context.Context, in *BuryTunnelRequest, opts ...grpc.CallOption) (*BuryTunnelResponse, error)
 }
 
 type sandhogClient struct {
@@ -42,34 +38,12 @@ func (c *sandhogClient) StartTunnel(ctx context.Context, in *StartTunnelRequest,
 	return out, nil
 }
 
-func (c *sandhogClient) DigTunnel(ctx context.Context, in *DigTunnelRequest, opts ...grpc.CallOption) (*DigTunnelResponse, error) {
-	out := new(DigTunnelResponse)
-	err := c.cc.Invoke(ctx, "/selftechio.sandhog.Sandhog/DigTunnel", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sandhogClient) BuryTunnel(ctx context.Context, in *BuryTunnelRequest, opts ...grpc.CallOption) (*BuryTunnelResponse, error) {
-	out := new(BuryTunnelResponse)
-	err := c.cc.Invoke(ctx, "/selftechio.sandhog.Sandhog/BuryTunnel", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // SandhogServer is the server API for Sandhog service.
 // All implementations must embed UnimplementedSandhogServer
 // for forward compatibility
 type SandhogServer interface {
 	// Tell sandhog to start a new tunnel.
 	StartTunnel(context.Context, *StartTunnelRequest) (*StartTunnelResponse, error)
-	// Tell sandhog to dig a new tunnel to a peer.
-	DigTunnel(context.Context, *DigTunnelRequest) (*DigTunnelResponse, error)
-	// Tell sandhog to bury a tunnel to a peer.
-	BuryTunnel(context.Context, *BuryTunnelRequest) (*BuryTunnelResponse, error)
 	mustEmbedUnimplementedSandhogServer()
 }
 
@@ -79,12 +53,6 @@ type UnimplementedSandhogServer struct {
 
 func (UnimplementedSandhogServer) StartTunnel(context.Context, *StartTunnelRequest) (*StartTunnelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartTunnel not implemented")
-}
-func (UnimplementedSandhogServer) DigTunnel(context.Context, *DigTunnelRequest) (*DigTunnelResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DigTunnel not implemented")
-}
-func (UnimplementedSandhogServer) BuryTunnel(context.Context, *BuryTunnelRequest) (*BuryTunnelResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BuryTunnel not implemented")
 }
 func (UnimplementedSandhogServer) mustEmbedUnimplementedSandhogServer() {}
 
@@ -117,42 +85,6 @@ func _Sandhog_StartTunnel_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Sandhog_DigTunnel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DigTunnelRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SandhogServer).DigTunnel(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/selftechio.sandhog.Sandhog/DigTunnel",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SandhogServer).DigTunnel(ctx, req.(*DigTunnelRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Sandhog_BuryTunnel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BuryTunnelRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SandhogServer).BuryTunnel(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/selftechio.sandhog.Sandhog/BuryTunnel",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SandhogServer).BuryTunnel(ctx, req.(*BuryTunnelRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Sandhog_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "selftechio.sandhog.Sandhog",
 	HandlerType: (*SandhogServer)(nil),
@@ -160,14 +92,6 @@ var _Sandhog_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StartTunnel",
 			Handler:    _Sandhog_StartTunnel_Handler,
-		},
-		{
-			MethodName: "DigTunnel",
-			Handler:    _Sandhog_DigTunnel_Handler,
-		},
-		{
-			MethodName: "BuryTunnel",
-			Handler:    _Sandhog_BuryTunnel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

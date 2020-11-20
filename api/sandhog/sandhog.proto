@@ -4,6 +4,11 @@ option go_package = "github.com/selftechio/sandhog/internal/api/sandhog";
 
 package selftechio.sandhog;
 
+enum Result {
+  OK = 0;
+  NOTOK = 1;
+}
+
 // A sandhog peer.
 message SandhogPeer {
   string          public_key           = 1;
@@ -19,36 +24,23 @@ message SandhogPeer {
 
 // Request a sandhog to create a new tunnel.
 message StartTunnelRequest {
-  int32 magic = 1;
+  // the name of the tunnel
+  string name    = 1;
+  // the address of the tunnel
+  string address = 2;
+  //
+
 }
 
 // A response from a sandhog that was requested to create a tunnel.
 message StartTunnelResponse {
-  bool            ok          = 1;
-  // optional string err         = 2;
-  // optional string address     = 3;
-  // optional string public_key  = 4;
-  // optional int32  listen_port = 5;
+  Result result       = 1;
+  oneof tunnel {
+    SandhogPeer tunnel_specs = 2;
+  }
 }
-
-message DigTunnelRequest {
-  int32       magic = 1;
-  SandhogPeer peer  = 2;
-}
-
-message DigTunnelResponse {
-  int32 magic = 1;
-}
-
-message BuryTunnelRequest {}
-
-message BuryTunnelResponse {}
 
 service Sandhog {
   // Tell sandhog to start a new tunnel.
   rpc StartTunnel(StartTunnelRequest) returns (StartTunnelResponse) {}
-  // Tell sandhog to dig a new tunnel to a peer.
-  rpc DigTunnel(DigTunnelRequest) returns (DigTunnelResponse) {}
-  // Tell sandhog to bury a tunnel to a peer.
-  rpc BuryTunnel(BuryTunnelRequest) returns (BuryTunnelResponse) {}
 }
