@@ -17,8 +17,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SandhogClient interface {
-	// Tell sandhog to start a new tunnel.
-	StartTunnel(ctx context.Context, in *StartTunnelRequest, opts ...grpc.CallOption) (*StartTunnelResponse, error)
+	// Initiate tunnel negotiations with a sandhog.
+	StartTunnelNegotiations(ctx context.Context, in *StartTunnelNegotiationsRequest, opts ...grpc.CallOption) (*StartTunnelNegotiationsResponse, error)
 }
 
 type sandhogClient struct {
@@ -29,9 +29,9 @@ func NewSandhogClient(cc grpc.ClientConnInterface) SandhogClient {
 	return &sandhogClient{cc}
 }
 
-func (c *sandhogClient) StartTunnel(ctx context.Context, in *StartTunnelRequest, opts ...grpc.CallOption) (*StartTunnelResponse, error) {
-	out := new(StartTunnelResponse)
-	err := c.cc.Invoke(ctx, "/selftechio.sandhog.Sandhog/StartTunnel", in, out, opts...)
+func (c *sandhogClient) StartTunnelNegotiations(ctx context.Context, in *StartTunnelNegotiationsRequest, opts ...grpc.CallOption) (*StartTunnelNegotiationsResponse, error) {
+	out := new(StartTunnelNegotiationsResponse)
+	err := c.cc.Invoke(ctx, "/selftechio.sandhog.Sandhog/StartTunnelNegotiations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +42,8 @@ func (c *sandhogClient) StartTunnel(ctx context.Context, in *StartTunnelRequest,
 // All implementations must embed UnimplementedSandhogServer
 // for forward compatibility
 type SandhogServer interface {
-	// Tell sandhog to start a new tunnel.
-	StartTunnel(context.Context, *StartTunnelRequest) (*StartTunnelResponse, error)
+	// Initiate tunnel negotiations with a sandhog.
+	StartTunnelNegotiations(context.Context, *StartTunnelNegotiationsRequest) (*StartTunnelNegotiationsResponse, error)
 	mustEmbedUnimplementedSandhogServer()
 }
 
@@ -51,8 +51,8 @@ type SandhogServer interface {
 type UnimplementedSandhogServer struct {
 }
 
-func (UnimplementedSandhogServer) StartTunnel(context.Context, *StartTunnelRequest) (*StartTunnelResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StartTunnel not implemented")
+func (UnimplementedSandhogServer) StartTunnelNegotiations(context.Context, *StartTunnelNegotiationsRequest) (*StartTunnelNegotiationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartTunnelNegotiations not implemented")
 }
 func (UnimplementedSandhogServer) mustEmbedUnimplementedSandhogServer() {}
 
@@ -67,20 +67,20 @@ func RegisterSandhogServer(s grpc.ServiceRegistrar, srv SandhogServer) {
 	s.RegisterService(&_Sandhog_serviceDesc, srv)
 }
 
-func _Sandhog_StartTunnel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StartTunnelRequest)
+func _Sandhog_StartTunnelNegotiations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartTunnelNegotiationsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SandhogServer).StartTunnel(ctx, in)
+		return srv.(SandhogServer).StartTunnelNegotiations(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/selftechio.sandhog.Sandhog/StartTunnel",
+		FullMethod: "/selftechio.sandhog.Sandhog/StartTunnelNegotiations",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SandhogServer).StartTunnel(ctx, req.(*StartTunnelRequest))
+		return srv.(SandhogServer).StartTunnelNegotiations(ctx, req.(*StartTunnelNegotiationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -90,8 +90,8 @@ var _Sandhog_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*SandhogServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "StartTunnel",
-			Handler:    _Sandhog_StartTunnel_Handler,
+			MethodName: "StartTunnelNegotiations",
+			Handler:    _Sandhog_StartTunnelNegotiations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
