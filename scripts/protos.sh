@@ -5,11 +5,12 @@ function main() {
     proto="$1"; shift
 
     protoc \
-        --go_out=./internal \
+        --proto_path=./api \
+        --go_out=./internal/api \
         --go_opt=paths=source_relative \
-        --go-grpc_out=./internal \
+        --go-grpc_out=./internal/api \
         --go-grpc_opt=paths=source_relative "${proto}"
 }
 
-main api/registry/registry.proto
-main api/sandhog/sandhog.proto
+main selftechio/naas/common.proto
+main selftechio/naas/naas.proto

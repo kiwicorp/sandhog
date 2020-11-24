@@ -1,0 +1,92 @@
+package server
+
+import (
+	"net"
+	"sync"
+	"time"
+
+	"github.com/hashicorp/go-hclog"
+	sandhogpb "github.com/selftechio/sandhog/internal/api/sandhog"
+	"google.golang.org/grpc"
+)
+
+var (
+	log hclog.Logger
+)
+
+func init() {
+	log = hclog.Default().Named("server")
+}
+
+// Start starts the sandhog server.
+func Start(wg *sync.WaitGroup, mainStopChan chan<- byte) (chan<- byte, error) {
+	// fixme 23.11.2020: hardcoded listener address and port
+	lis, err := net.Listen("tcp", "127.0.0.1:22222")
+	if err != nil {
+		return nil, err
+	}
+
+	// fixme 23.11.2020: grpc server created with no options
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
+
+	// fixme 23.11.2020: sandhog server created with no options
+	sandhogpb.RegisterSandhogServer(grpcServer, newSandhogServer())
+
+	// stop channel for external events
+	extStopChan := make(chan byte, 1)
+	// stop channel for internal events(the grpc server itself)
+	intStopChan := make(chan byte, 1)
+
+	go func(server *grpc.Server, lis net.Listener, intStopChan chan<- byte) {
+		wg.Add(1)
+		defer wg.Done()
+
+		log.Info("grpc server started")
+
+		err := grpcServer.Serve(lis)
+		if err != nil {
+			log.Error("grpc server encountered an error", "err", err)
+			intStopChan <- 0x1
+		}
+	}(grpcServer, lis, intStopChan)
+	go start(grpcServer, wg, mainStopChan, intStopChan, extStopChan)
+
+	return extStopChan, nil
+}
+
+func start(server *grpc.Server, wg *sync.WaitGroup, mainStopChan chan<- byte, intStopChan, extStopChan <-chan byte) {
+	wg.Add(1)
+	defer wg.Done()
+
+	log.Info("grpc server companion started")
+
+	select {
+	case _ = <-intStopChan:
+		mainStopChan <- 0x1
+		return
+	case _ = <-extStopChan:
+		// attempt a graceful shutdown
+		stopDone := make(chan byte, 1)
+		stopTimeout := make(chan byte, 1)
+
+		go func() {
+			server.GracefulStop()
+			stopDone <- 0x1
+		}()
+		go func() {
+			// fixme 23.11.2020: hardcoded grpc server graceful stop timeout
+			time.Sleep(3 * time.Second)
+			stopTimeout <- 0x1
+		}()
+
+		select {
+		case _ = <-stopDone:
+			log.Info("graceful shutdown of grpc server successful")
+		case _ = <-stopTimeout:
+			log.Error("graceful shutdown of grpc server failed, stopping by force")
+			server.Stop()
+		}
+		return
+	}
+}

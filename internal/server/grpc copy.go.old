@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net"
 
 	"github.com/hashicorp/go-hclog"
@@ -17,7 +18,7 @@ func init() {
 }
 
 // Start starts the sandhog server.
-func Start() error {
+func Start(ctx context.Context, cancel context.CancelFunc) error {
 	// fixme 23.11.2020: hardcoded listener address and port
 	lis, err := net.Listen("tcp", "127.0.0.1:22222")
 	if err != nil {
@@ -31,17 +32,25 @@ func Start() error {
 	// fixme 23.11.2020: sandhog server created with no options
 	sandhogpb.RegisterSandhogServer(grpcServer, newSandhogServer())
 
-	// fixme 23.11.2020: sandhog server goroutine cannot be gracefully stopped
-	// fixme 23.11.2020: sandhog server goroutine cannot gracefully stop sandhog in case of an
-	//                   error
-	go func() {
-		log.Info("grpc server starting")
+	serverCtx, serverCancel := context.WithCancel(ctx)
+
+	go func(cancel context.CancelFunc) {
+		log.Info("grpc server started")
 
 		err := grpcServer.Serve(lis)
 		if err != nil {
 			log.Error("grpc server encountered an error", "err", err)
+			cancel()
 		}
-	}()
+	}(serverCancel)
+	go start(serverCtx, cancel)
 
 	return nil
+}
+
+func start(ctx context.Context, cancel context.CancelFunc) {
+	log.Info("grpc server companion started")
+
+	<-ctx.Done()
+	cancel()
 }

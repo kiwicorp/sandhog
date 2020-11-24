@@ -2,9 +2,10 @@ package server
 
 import (
 	"context"
+	"os"
 
+	uuid "github.com/satori/go.uuid"
 	sandhogpb "github.com/selftechio/sandhog/internal/api/sandhog"
-	"github.com/selftechio/sandhog/internal/tunnel"
 )
 
 type sandhogServer struct {
@@ -15,28 +16,18 @@ func newSandhogServer() *sandhogServer {
 	return new(sandhogServer)
 }
 
-func (s *sandhogServer) StartTunnel(ctx context.Context, req *sandhogpb.StartTunnelRequest) (*sandhogpb.StartTunnelResponse, error) {
-	resp := new(sandhogpb.StartTunnelResponse)
+func (s *sandhogServer) StartTunnelNegotiations(ctx context.Context, req *sandhogpb.StartTunnelNegotiationsRequest) (*sandhogpb.StartTunnelNegotiationsResponse, error) {
+	log.Info("starting tunnel negotiations", "tunnel-name", req.GetTunnelName(), "tunnel-uuid", req.GetTunnelUuid())
 
-	_, err := tunnel.NewTunnel(req.GetAddress(), req.GetName())
+	hostname, err := os.Hostname()
 	if err != nil {
-		resp.Result = sandhogpb.Result_NOTOK
-	} else {
-		resp.Result = sandhogpb.Result_OK
-		resp.Tunnel = &sandhogpb.StartTunnelResponse_TunnelSpecs{
-			TunnelSpecs: &sandhogpb.SandhogPeer{
-				PublicKey:  "abc",
-				AllowedIps: make([]string, 1),
-				ListenPort: 51820,
-				Endpoint: &sandhogpb.SandhogPeer_EndpointValue{
-					EndpointValue: "abc",
-				},
-				PersistentKeepalive: &sandhogpb.SandhogPeer_PersistentKeepaliveValue{
-					PersistentKeepaliveValue: 25,
-				},
-			},
-		}
+		log.Warn("failed to start tunnel negotiations: failed to get the machine hostname", "err", err)
+		return nil, err
 	}
+
+	resp := new(sandhogpb.StartTunnelNegotiationsResponse)
+	resp.SandhogHostname = hostname
+	resp.SandhogUuid = uuid.NewV4().String()
 
 	return resp, nil
 }

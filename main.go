@@ -1,18 +1,28 @@
 package main
 
 import (
-	"log"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/selftechio/sandhog/internal/tunnel"
+	"github.com/hashicorp/go-hclog"
+	"github.com/selftechio/sandhog/internal/server"
 )
 
-func main() {
-	tun, err := tunnel.NewTunnel("10.11.12.13/32", "wgtest0")
-	if err != nil {
-		log.Fatalf("error: %s", err)
-	}
-	defer tun.Close()
+var (
+	log hclog.Logger
+)
 
-	time.Sleep(time.Second * 5)
+func init() {
+	log = hclog.Default().Named("main")
+}
+
+func main() {
+	log.Info("hello, this is sandhog")
+
+	server.Start()
+
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+	<-stopChan
 }
