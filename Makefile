@@ -4,8 +4,7 @@
 # internal/api/$(PROTOS)/*.go: $(SRC_PROTOS)
 
 SRC=main.go	\
-	internal/api/registry/*.go \
-	internal/api/sandhog/*.go \
+	internal/api/selftechio/*/*.go \
 	internal/links/*.go \
 	internal/tunnel/*.go
 BIN=bin/sandhog
