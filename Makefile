@@ -6,6 +6,7 @@
 SRC=main.go	\
 	internal/api/selftechio/*/*.go \
 	internal/links/*.go \
+	internal/registry/*.go \
 	internal/tunnel/*.go
 BIN=bin/sandhog
 

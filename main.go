@@ -6,7 +6,7 @@ import (
 	"syscall"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/selftechio/sandhog/internal/server"
+	"github.com/selftechio/sandhog/internal/registry"
 )
 
 var (
@@ -20,7 +20,10 @@ func init() {
 func main() {
 	log.Info("hello, this is sandhog")
 
-	server.Start()
+	err := registry.Register()
+	if err != nil {
+		panic(err)
+	}
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
